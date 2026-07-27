@@ -1,0 +1,1557 @@
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=0.8in]{geometry}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{array}
+\usepackage{hyperref}
+
+\setlist[itemize]{leftmargin=1.3em, noitemsep, topsep=3pt}
+\setlist[enumerate]{leftmargin=1.5em, noitemsep, topsep=3pt}
+
+\title{\textbf{System Design Revision Notes}}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Distributed System}
+
+\subsection*{Definition}
+
+A distributed system is a collection of independent components located on different machines that share messages with each other in order to achieve common goals.
+
+\section{Performance}
+
+\subsection*{Definition}
+
+Performance describes how a system behaves under a specific workload. It is not one number. It is measured using several metrics, such as latency, throughput, error rate, resource utilization, queue length, uptime, and recovery time.
+
+\[
+\boxed{\text{Performance} = \text{System behavior under a specific workload}}
+\]
+
+\subsection*{Example}
+
+Suppose a payment system receives 1,000 requests per second. Under this load, it completes 950 requests per second, average latency is 300 ms, error rate is 2\%, and CPU utilization is 75\%. Together, these values describe the system's performance.
+
+\subsection*{Important Formulas}
+
+\[
+\text{Error Rate}
+=
+\frac{\text{Failed Requests}}{\text{Total Requests}}
+\times 100
+\]
+
+\[
+\text{Uptime}
+=
+\frac{\text{Total Time} - \text{Downtime}}{\text{Total Time}}
+\times 100
+\]
+
+\[
+\text{MTBF}
+=
+\frac{\text{Total Operating Time}}{\text{Number of Failures}}
+\]
+
+\[
+\text{MTTR}
+=
+\frac{\text{Total Recovery Time}}{\text{Number of Failures}}
+\]
+
+\subsection*{Solved Problem}
+
+\textbf{Problem:} A system processes 3,600 requests in 12 hours. During this period, 72 requests fail, the system experiences 3 outages, and each outage lasts 15 minutes.
+
+\textbf{Find:} Throughput, error rate, MTBF, MTTR, and uptime.
+
+\textbf{Solution:}
+
+\[
+\text{Throughput}
+=
+\frac{3600}{12}
+=
+300 \text{ requests/hour}
+\]
+
+\[
+\text{Error Rate}
+=
+\frac{72}{3600}
+\times 100
+=
+2\%
+\]
+
+\[
+\text{MTBF}
+=
+\frac{12}{3}
+=
+4 \text{ hours}
+\]
+
+\[
+\text{MTTR}
+=
+15 \text{ minutes}
+\]
+
+Total downtime is:
+
+\[
+3 \times 15 = 45 \text{ minutes}
+\]
+
+Total time is:
+
+\[
+12 \times 60 = 720 \text{ minutes}
+\]
+
+\[
+\text{Uptime}
+=
+\frac{720 - 45}{720}
+\times 100
+=
+93.75\%
+\]
+
+\textbf{Final Answer:} Throughput is 300 requests/hour, error rate is 2\%, MTBF is 4 hours, MTTR is 15 minutes, and uptime is 93.75\%.
+
+\section{Scalability}
+
+\subsection*{Definition}
+
+Scalability is the ability of a system to handle increasing demand by adding resources while maintaining acceptable performance.
+
+\[
+\boxed{\text{Scalability} = \text{Ability to handle growth by adding resources}}
+\]
+
+\subsection*{Types of Scaling}
+
+\textbf{Vertical scaling} means making one machine more powerful, such as adding CPU, memory, or faster storage.
+
+\textbf{Horizontal scaling} means adding more machines or server instances.
+
+\subsection*{Important Concepts and Formulas}
+
+\textbf{Capacity} is the maximum workload a system can sustainably handle while meeting latency and error-rate requirements.
+
+\[
+\text{Resource Multiplier}
+=
+\frac{\text{New Resources}}{\text{Original Resources}}
+\]
+
+\[
+\text{Capacity Multiplier}
+=
+\frac{\text{New Capacity}}{\text{Original Capacity}}
+\]
+
+\[
+\text{Capacity Increase}
+=
+\frac{\text{New Capacity} - \text{Original Capacity}}
+{\text{Original Capacity}}
+\times 100
+\]
+
+\[
+\text{Scaling Efficiency}
+=
+\frac{\text{Capacity Multiplier}}
+{\text{Resource Multiplier}}
+\times 100
+\]
+
+\textbf{Elasticity} measures how quickly a system adds or removes resources when demand changes.
+
+\[
+\boxed{\text{Elasticity} = \text{Speed of adapting resources to changing demand}}
+\]
+
+\textbf{Cost efficiency} measures how much useful capacity is obtained for the money spent.
+
+\[
+\text{Capacity per Dollar}
+=
+\frac{\text{System Capacity}}{\text{Hourly Cost}}
+\]
+
+\subsection*{Solved Problem}
+
+\textbf{Problem:} A system uses 4 servers and supports 1,200 requests per second. The number of servers is increased to 8, and the new system supports 2,040 requests per second.
+
+\textbf{Find:} Resource multiplier, capacity multiplier, capacity increase, and scaling efficiency.
+
+\textbf{Solution:}
+
+\[
+\text{Resource Multiplier}
+=
+\frac{8}{4}
+=
+2
+\]
+
+\[
+\text{Capacity Multiplier}
+=
+\frac{2040}{1200}
+=
+1.7
+\]
+
+\[
+\text{Capacity Increase}
+=
+\frac{2040 - 1200}{1200}
+\times 100
+=
+70\%
+\]
+
+\[
+\text{Scaling Efficiency}
+=
+\frac{1.7}{2}
+\times 100
+=
+85\%
+\]
+
+\textbf{Final Answer:} Resources increased by $2\times$, capacity increased by $1.7\times$, capacity increased by 70\%, and scaling efficiency is 85\%.
+
+\textbf{Interpretation:} The system scales horizontally, but it does not scale perfectly because doubling the servers does not double the capacity.
+
+\subsection*{Elasticity Example}
+
+A streaming system has 5 servers, and each server supports 200 streams.
+
+\[
+\text{Original Capacity}
+=
+5 \times 200
+=
+1000 \text{ streams}
+\]
+
+Demand increases to 1,600 streams.
+
+\[
+\text{Required Servers}
+=
+\frac{1600}{200}
+=
+8
+\]
+
+\[
+\text{Additional Servers Required}
+=
+8 - 5
+=
+3
+\]
+
+If autoscaling takes 5 minutes, then the scale-up response time is 5 minutes. Before scaling finishes, the capacity shortfall is:
+
+\[
+1600 - 1000 = 600 \text{ streams}
+\]
+
+\section{Latency}
+
+\subsection*{Definition}
+
+Latency is the total time between sending a request and receiving its response.
+
+\[
+\boxed{\text{Latency} = \text{Time taken by one request}}
+\]
+
+\[
+\text{Latency}
+=
+\text{Response Time}
+-
+\text{Request Start Time}
+\]
+
+For a payment request, latency starts when the user clicks the Pay button and ends when the user receives confirmation.
+
+\subsection*{Components of Latency}
+
+\[
+\begin{aligned}
+\text{Total Latency}
+={}&
+\text{Network Delay}
++
+\text{Queueing Delay} \\
+&+
+\text{Processing Delay}
++
+\text{Database Delay} \\
+&+
+\text{External Service Delay}
+\end{aligned}
+\]
+
+\begin{itemize}
+    \item \textbf{Network delay:} Time required for data to travel.
+    \item \textbf{Queueing delay:} Time spent waiting before processing.
+    \item \textbf{Processing delay:} Time required by the server.
+    \item \textbf{Database delay:} Time required to read or write data.
+    \item \textbf{External service delay:} Time spent waiting for another system.
+\end{itemize}
+
+\subsection*{Queueing Example}
+
+Suppose a server processes 100 requests per second, and 700 requests arrive simultaneously. The requests are processed in groups of 100.
+
+\begin{center}
+\begin{tabular}{ccc}
+\toprule
+\textbf{Group} & \textbf{Requests} & \textbf{Approximate Latency} \\
+\midrule
+1 & 1--100 & 1 second \\
+2 & 101--200 & 2 seconds \\
+3 & 201--300 & 3 seconds \\
+4 & 301--400 & 4 seconds \\
+5 & 401--500 & 5 seconds \\
+6 & 501--600 & 6 seconds \\
+7 & 601--700 & 7 seconds \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The 700th request has an approximate latency of 7 seconds. Its processing time may still be one second, but it experiences additional queueing delay.
+
+\subsection*{Timeout Example}
+
+Suppose capacity is 100 requests per second, 700 requests arrive, and the timeout is 5 seconds.
+
+Requests completed before timeout:
+
+\[
+100 \times 5 = 500
+\]
+
+Timed-out requests:
+
+\[
+700 - 500 = 200
+\]
+
+Timeout error rate:
+
+\[
+\frac{200}{700}
+\times 100
+=
+28.57\%
+\]
+
+\textbf{Final Answer:} 500 requests complete, 200 time out, maximum successful latency is 5 seconds, and timeout error rate is 28.57\%.
+
+\subsection*{Percentile Latency: P50, P95, and P99}
+
+\subsection*{Definition}
+
+Percentile latency shows latency distribution across many requests.
+
+\begin{itemize}
+    \item \textbf{P50 latency:} Median latency; 50\% of requests finish within this time.
+    \item \textbf{P95 latency:} 95\% of requests finish within this time; the slowest 5\% take longer.
+    \item \textbf{P99 latency:} 99\% of requests finish within this time; the slowest 1\% take longer.
+\end{itemize}
+
+\[
+\boxed{
+\text{P50 shows typical latency; P95 and P99 expose slow-user experience.}
+}
+\]
+
+\subsection*{Example}
+
+Suppose 10 payment requests have these sorted latencies:
+
+\[
+100,\ 120,\ 150,\ 180,\ 200,\ 250,\ 300,\ 400,\ 800,\ 1200 \text{ ms}
+\]
+
+Using the nearest-rank method:
+
+\[
+\text{P50 position} = 0.50 \times 10 = 5
+\]
+
+\[
+\text{P50 latency} = 200 \text{ ms}
+\]
+
+\[
+\text{P95 position} = 0.95 \times 10 = 9.5 \approx 10
+\]
+
+\[
+\text{P95 latency} = 1200 \text{ ms}
+\]
+
+\subsection*{Interpretation}
+
+Most requests are fast, but a few are very slow. Average latency may hide this problem, while P95 and P99 reveal it.
+
+\[
+\boxed{
+\text{Average latency hides outliers; percentile latency exposes them.}
+}
+
+\section{Throughput}
+
+\subsection*{Definition}
+
+Throughput is the amount of work completed by a system during a given period.
+
+\[
+\boxed{\text{Throughput} = \frac{\text{Completed Work}}{\text{Time}}}
+\]
+
+\[
+\text{Throughput}
+=
+\frac{\text{Completed Requests}}{\text{Time}}
+\]
+
+Common units include requests per second, transactions per second, and messages per second.
+
+\subsection*{Important Distinctions}
+
+\[
+\text{Incoming Rate}
+=
+\frac{\text{Requests Received}}{\text{Time}}
+\]
+
+\[
+\text{Completed Throughput}
+=
+\frac{\text{Completed Requests}}{\text{Time}}
+\]
+
+\[
+\text{Goodput}
+=
+\frac{\text{Successful Requests}}{\text{Time}}
+\]
+
+\textbf{Incoming request rate} counts requests arriving at the system. \textbf{Completed throughput} counts requests that finish processing. \textbf{Goodput} counts only successful and useful requests.
+
+\subsection*{Example}
+
+During one second, 100 requests arrive, 95 succeed, 3 finish with errors, and 2 remain queued.
+
+\[
+\text{Incoming Rate}
+=
+100 \text{ requests/second}
+\]
+
+\[
+\text{Completed Throughput}
+=
+95 + 3
+=
+98 \text{ requests/second}
+\]
+
+\[
+\text{Goodput}
+=
+95 \text{ requests/second}
+\]
+
+The queued requests are not counted because they have not finished.
+
+\subsection*{Solved Problem}
+
+A system receives 700 requests and processes 500 requests within 5 seconds. Of the 500 completed requests, 480 succeed and 20 return errors. Another 200 requests time out.
+
+Completed throughput:
+
+\[
+\frac{500}{5}
+=
+100 \text{ requests/second}
+\]
+
+Successful throughput:
+
+\[
+\frac{480}{5}
+=
+96 \text{ requests/second}
+\]
+
+Overall unsuccessful requests:
+
+\[
+20 + 200 = 220
+\]
+
+Overall unsuccessful rate:
+
+\[
+\frac{220}{700}
+\times 100
+=
+31.43\%
+\]
+
+\textbf{Final Answer:} Completed throughput is 100 requests/second, successful throughput is 96 requests/second, and the overall unsuccessful rate is 31.43\%.
+
+\section{Consistency}
+
+\subsection*{Definition}
+
+\begin{itemize}
+    \item Every read returns the latest successful write.
+    \item All replicas provide the same view of the data.
+    \item Users do not observe stale data.
+\end{itemize}
+
+\[
+\boxed{\text{Consistency} = \text{Latest data is always returned}}
+\]
+
+\subsection*{Example}
+
+\begin{itemize}
+    \item A user transfers \$500 from their bank account.
+    \item The balance changes from \$2,000 to \$1,500.
+    \item If every ATM, mobile app, and bank server shows \$1,500, the system is consistent.
+    \item If one ATM still shows \$2,000, the system is temporarily inconsistent.
+\end{itemize}
+
+\section{Availability}
+
+\subsection*{Definition}
+
+\begin{itemize}
+    \item Every request receives a response.
+    \item The response may contain stale data.
+    \item Availability focuses on responding, not necessarily with the latest data.
+\end{itemize}
+
+\[
+\boxed{\text{Availability} = \text{Every request gets a response}}
+\]
+
+\subsection*{Example}
+
+\begin{itemize}
+    \item East Coast and West Coast Instagram data centers lose communication.
+    \item Both continue serving their local users.
+    \item Users receive responses even though the data may differ.
+\end{itemize}
+
+\section{Partition Tolerance}
+
+\subsection*{Definition}
+
+\begin{itemize}
+    \item The system continues operating despite a network partition.
+    \item A network partition means two servers or data centers cannot communicate.
+    \item It is unrelated to Kafka partitions, database partitioning, or sharding.
+\end{itemize}
+
+\[
+\boxed{\text{Partition Tolerance} = \text{System survives network failures}}
+\]
+
+\subsection*{Example}
+
+\begin{itemize}
+    \item East Coast and West Coast data centers become disconnected.
+    \item Both continue serving local users.
+    \item Updates cannot be replicated until communication is restored.
+\end{itemize}
+
+\section{CAP Theorem}
+
+\subsection*{Definition}
+
+During a network partition, a distributed system can guarantee only one of:
+
+\[
+\boxed{\text{Consistency + Partition Tolerance (CP)}}
+\]
+
+or
+
+\[
+\boxed{\text{Availability + Partition Tolerance (AP)}}
+\]
+
+\[
+\boxed{\text{CAP: During a network partition, choose CP or AP}}
+\]
+
+\subsection*{CP System}
+
+\begin{itemize}
+    \item Prioritizes consistency.
+    \item May reject or delay requests.
+    \item Never returns stale data.
+\end{itemize}
+
+\subsection*{AP System}
+
+\begin{itemize}
+    \item Prioritizes availability.
+    \item Always responds to requests.
+    \item May temporarily return stale data.
+\end{itemize}
+
+\subsection*{Instagram Example}
+
+\begin{itemize}
+    \item A user deletes a post on the West Coast.
+    \item Due to a network partition, the East Coast has not received the update.
+    \item \textbf{AP:} East Coast still shows the old post.
+    \item \textbf{CP:} East Coast blocks or delays the request until it confirms the latest data.
+\end{itemize}
+
+\section{Weak Consistency}
+
+\subsection*{Definition}
+
+Weak consistency does not guarantee that a read immediately following a write will return the most recently updated value. Different users or replicas may temporarily observe different versions of the same data.
+
+\noindent
+\fbox{\parbox{0.95\linewidth}{
+\textbf{Quick Revision:} Weak consistency allows stale reads and provides no specific guarantee about when the latest value will become visible.
+}}
+
+\begin{itemize}
+    \item A write may not be immediately visible to all users.
+    \item Subsequent reads may return old or stale data.
+    \item Different replicas may temporarily contain different values.
+    \item Weak consistency alone does not guarantee when replicas will converge.
+\end{itemize}
+
+\subsection*{Real-World Example}
+
+Suppose an e-commerce platform changes a product price from \$100 to \$120. Immediately after the update, one user may see \$120 while another user connected to a different replica may still see \$100.
+
+\section{Eventual Consistency}
+
+\subsection*{Definition}
+
+Eventual consistency is a form of weak consistency in which replicas may temporarily contain different values, but they will eventually converge to the same value if no new writes occur.
+
+\noindent
+\fbox{\parbox{0.95\linewidth}{
+\textbf{Quick Revision:} Eventual consistency allows temporary stale reads but guarantees that all replicas will eventually converge.
+}}
+
+\begin{itemize}
+    \item Updates are commonly propagated asynchronously.
+    \item Reads may temporarily return stale data.
+    \item Replicas eventually become consistent if no new updates occur.
+    \item It provides higher availability and lower write latency than strong consistency in many distributed systems.
+\end{itemize}
+
+\subsection*{Real-World Example}
+
+A user updates their profile picture on a social-media platform. Some users may temporarily see the old picture because they are reading from replicas that have not yet received the update. After replication completes, all users see the new picture.
+
+\subsection*{Important Distinction}
+
+\begin{itemize}
+    \item \textbf{Weak consistency} does not necessarily guarantee convergence.
+    \item \textbf{Eventual consistency} guarantees convergence when no additional writes occur.
+\end{itemize}
+
+\section{Strong Consistency}
+
+\subsection*{Definition}
+
+Strong consistency guarantees that once a write operation successfully completes, every subsequent read returns the latest completed value.
+
+\noindent
+\fbox{\parbox{0.95\linewidth}{
+\textbf{Quick Revision:} Strong consistency ensures that every read after a completed write observes the latest value.
+}}
+
+\begin{itemize}
+    \item Stale reads are not allowed after a write has completed.
+    \item The system behaves as if there is a single up-to-date copy of the data.
+    \item Writes may require coordination between a leader or a quorum of replicas.
+    \item Strong consistency may increase latency and reduce availability during network failures.
+\end{itemize}
+
+\subsection*{Real-World Example}
+
+A bank account has a balance of \$1,000. After a successful \$200 withdrawal, every subsequent balance check must return \$800. Returning the previous balance of \$1,000 would violate strong consistency.
+
+\subsection*{Important Distinction}
+
+Strong consistency does not necessarily mean that every physical replica is updated at exactly the same instant. It means that the system prevents clients from observing stale data after the write has been acknowledged.
+
+% Replacement/additional rows for the Final Comparison table
+
+\section{Availability}
+
+\subsection*{Definition}
+Availability is the percentage of time a system remains operational and accessible during a specified period.
+
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\centering
+Availability measures how often a system is usable.
+}}
+\end{center}
+
+\[
+\text{Availability}
+=
+\frac{\text{Uptime}}
+{\text{Uptime}+\text{Downtime}}
+\times 100
+\]
+
+\begin{itemize}
+    \item Uptime is the duration for which the system operates correctly.
+    \item Downtime is the duration for which the system is unavailable.
+    \item Replication, redundancy, and failover are commonly used to improve availability.
+\end{itemize}
+
+\subsection*{Real-World Example}
+An e-commerce system uses multiple application servers and a backup database so that users can continue placing orders even when one component fails.
+
+
+\section{Availability Nines}
+
+\subsection*{Definition}
+Availability is commonly expressed using ``nines.'' The number of consecutive \(9\)s represents the expected availability level of the system.
+
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\centering
+More nines mean higher availability and less permitted downtime.
+}}
+\end{center}
+
+\begin{itemize}
+    \item \(99.9\%\) availability is called three nines.
+    \item \(99.99\%\) availability is called four nines.
+    \item \(99.999\%\) availability is called five nines.
+    \item Achieving additional nines usually requires more redundancy, complexity, and cost.
+\end{itemize}
+
+\[
+\text{Allowed Downtime}
+=
+\text{Total Time}
+\times
+(1-\text{Availability})
+\]
+
+\subsection*{Approximate Annual Downtime}
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Availability} & \textbf{Name} & \textbf{Annual Downtime} \\
+\hline
+\(99\%\) & Two nines & Approximately \(3.65\) days \\
+\hline
+\(99.9\%\) & Three nines & Approximately \(8.76\) hours \\
+\hline
+\(99.99\%\) & Four nines & Approximately \(52.56\) minutes \\
+\hline
+\(99.999\%\) & Five nines & Approximately \(5.26\) minutes \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection*{Solved Problem}
+
+\textbf{Problem:} Calculate the maximum annual downtime for a system with \(99.99\%\) availability.
+
+\textbf{Given:}
+\begin{itemize}
+    \item Availability \(= 99.99\% = 0.9999\)
+    \item Total minutes in one year \(= 365 \times 24 \times 60 = 525{,}600\)
+\end{itemize}
+
+\textbf{Find:} Maximum annual downtime.
+
+\textbf{Solution:}
+\[
+\text{Downtime}
+=
+525{,}600 \times (1-0.9999)
+\]
+
+\[
+\text{Downtime}
+=
+525{,}600 \times 0.0001
+=
+52.56 \text{ minutes}
+\]
+
+\textbf{Final Answer:}
+\[
+\boxed{52.56 \text{ minutes per year}}
+\]
+
+
+\section{Replication}
+
+\subsection*{Definition}
+Replication is the process of maintaining copies of the same data on multiple servers to improve availability and fault tolerance.
+
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\centering
+Replication keeps multiple copies of data so that another server can continue serving requests after a failure.
+}}
+\end{center}
+
+\begin{itemize}
+    \item Replicas reduce the risk of a single database server becoming a single point of failure.
+    \item Replication may be synchronous or asynchronous.
+    \item Replication alone does not guarantee automatic recovery; a failover mechanism may also be required.
+\end{itemize}
+
+\subsection*{Real-World Example}
+An online banking system stores account data on a primary database and one or more replica databases. If the primary database fails, a replica can be promoted to replace it.
+
+
+\section{Primary-Primary Replication}
+
+\subsection*{Definition}
+Primary-primary replication is a replication pattern in which multiple database servers accept both read and write operations and replicate changes to each other.
+
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\centering
+Primary-primary replication improves availability and write capacity but introduces conflict-resolution complexity.
+}}
+\end{center}
+
+\begin{itemize}
+    \item All primary nodes can serve read and write requests.
+    \item The system can continue accepting writes when one primary node fails.
+    \item Write conflicts may occur when different nodes update the same data simultaneously.
+    \item Conflict detection and resolution are required.
+\end{itemize}
+
+\subsection*{Advantages}
+\begin{itemize}
+    \item High availability for both reads and writes.
+    \item Better utilization of all database nodes.
+    \item Can support users from multiple geographic regions.
+\end{itemize}
+
+\subsection*{Disadvantages}
+\begin{itemize}
+    \item Complex conflict resolution.
+    \item Greater risk of inconsistent data.
+    \item Replication and operational management are more difficult.
+\end{itemize}
+
+\subsection*{Real-World Example}
+A globally distributed application allows users in the United States and Europe to write to nearby database nodes. Both nodes replicate updates to each other, and the system must resolve conflicting updates to the same record.
+
+
+\section{Primary-Replica Replication}
+
+\subsection*{Definition}
+Primary-replica replication is a pattern in which one primary server accepts write operations, while replica servers copy its data and typically serve read operations.
+
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\centering
+Primary-replica replication simplifies writes by allowing only one primary writer.
+}}
+\end{center}
+
+\begin{itemize}
+    \item The primary server handles writes and may also handle reads.
+    \item Replica servers usually handle read requests.
+    \item Replicas continuously copy changes from the primary.
+    \item If the primary fails, a replica may be promoted to become the new primary.
+\end{itemize}
+
+\subsection*{Advantages}
+\begin{itemize}
+    \item Simpler consistency management because only one server accepts writes.
+    \item Read traffic can be distributed across multiple replicas.
+    \item Easier conflict handling than primary-primary replication.
+\end{itemize}
+
+\subsection*{Disadvantages}
+\begin{itemize}
+    \item The primary may become a write bottleneck.
+    \item Replicas may return stale data because of replication delay.
+    \item Failover may cause temporary downtime.
+\end{itemize}
+
+\subsection*{Real-World Example}
+An e-commerce database sends all product updates to the primary server, while read replicas serve product-search and product-detail requests.
+
+
+\section{Failover}
+
+\subsection*{Definition}
+Failover is the process of transferring traffic or responsibilities from a failed component to a healthy replacement component.
+
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\centering
+Failover keeps a system available by replacing a failed component with a healthy one.
+}}
+\end{center}
+
+\begin{itemize}
+    \item Failover may be automatic or manual.
+    \item Health checks or heartbeat messages are used to detect failures.
+    \item The replacement component must have the required data and configuration.
+    \item Failover time directly affects system downtime.
+\end{itemize}
+
+\subsection*{Real-World Example}
+If the primary database stops sending heartbeat signals, the system promotes a replica database and redirects application traffic to it.
+
+
+\section{Active-Active Failover}
+
+\subsection*{Definition}
+Active-active is a failover pattern in which multiple components actively serve traffic at the same time.
+
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\centering
+In active-active failover, all healthy components serve traffic and share the workload.
+}}
+\end{center}
+
+\begin{itemize}
+    \item Traffic is distributed across multiple active components.
+    \item If one component fails, the remaining components absorb its traffic.
+    \item A load balancer commonly routes requests to healthy components.
+    \item Stateless services are well suited for this pattern.
+\end{itemize}
+
+\subsection*{Advantages}
+\begin{itemize}
+    \item High resource utilization.
+    \item Minimal interruption during failure.
+    \item Supports horizontal scaling.
+\end{itemize}
+
+\subsection*{Disadvantages}
+\begin{itemize}
+    \item Data synchronization can be complex for stateful components.
+    \item Remaining nodes must have enough capacity to handle additional traffic.
+    \item Split-brain and conflicting writes may occur in distributed databases.
+\end{itemize}
+
+\subsection*{Real-World Example}
+Several stateless web servers run behind a load balancer. All servers process requests, and if one server fails, the load balancer sends traffic to the remaining servers.
+
+
+\section{Active-Passive Failover}
+
+\subsection*{Definition}
+Active-passive is a failover pattern in which one component actively serves traffic while another component remains on standby.
+
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\centering
+In active-passive failover, the standby component takes over only after the active component fails.
+}}
+\end{center}
+
+\begin{itemize}
+    \item The active component handles normal traffic.
+    \item The passive component remains ready to take over.
+    \item Heartbeats or health checks are used to detect active-component failure.
+    \item During failover, the passive component may assume the active component's network address or role.
+\end{itemize}
+
+\subsection*{Advantages}
+\begin{itemize}
+    \item Simpler consistency management.
+    \item Lower risk of simultaneous conflicting writes.
+    \item Easier to operate than active-active for stateful databases.
+\end{itemize}
+
+\subsection*{Disadvantages}
+\begin{itemize}
+    \item The standby component is underutilized during normal operation.
+    \item Failover may introduce a short interruption.
+    \item The standby component may contain slightly stale data.
+\end{itemize}
+
+\subsection*{Real-World Example}
+A primary database processes all reads and writes, while a standby database continuously receives replicated updates. If the primary fails, the standby is promoted and begins serving application traffic.
+
+
+\section{Sequential Availability}
+
+\subsection*{Definition}
+Components are arranged sequentially when every component must be available for the complete system operation to succeed.
+
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\centering
+In a sequential system, failure of any required component can make the entire system unavailable.
+}}
+\end{center}
+
+For independent sequential components:
+
+\[
+A_{\text{system}}
+=
+A_1 \times A_2 \times \cdots \times A_n
+\]
+
+\begin{itemize}
+    \item Every component is part of the critical execution path.
+    \item Overall availability is lower than the availability of each individual component.
+    \item Adding more mandatory dependencies decreases total system availability.
+\end{itemize}
+
+\subsection*{Real-World Example}
+An e-commerce checkout request sequentially depends on the order service, payment service, inventory service, and database. If any required component is unavailable, checkout fails.
+
+\subsection*{Solved Problem}
+
+\textbf{Problem:} Calculate the availability of two sequential components.
+
+\textbf{Given:}
+\begin{itemize}
+    \item Component \(A\) availability \(= 99.99\% = 0.9999\)
+    \item Component \(B\) availability \(= 99.99\% = 0.9999\)
+\end{itemize}
+
+\textbf{Find:} Total system availability.
+
+\textbf{Solution:}
+\[
+A_{\text{system}}
+=
+0.9999 \times 0.9999
+=
+0.99980001
+\]
+
+\[
+A_{\text{system}}
+=
+99.980001\%
+\]
+
+\textbf{Final Answer:}
+\[
+\boxed{A_{\text{system}} \approx 99.98\%}
+\]
+
+
+\section{Parallel Availability}
+
+\subsection*{Definition}
+Components are arranged in parallel when the system can continue operating as long as at least one redundant component remains available.
+
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\centering
+Parallel redundancy increases availability because the system fails only when all redundant components fail.
+}}
+\end{center}
+
+For two independent parallel components:
+
+\[
+A_{\text{system}}
+=
+1-(1-A_1)(1-A_2)
+\]
+
+For \(n\) identical parallel components:
+
+\[
+A_{\text{system}}
+=
+1-(1-A)^n
+\]
+
+\begin{itemize}
+    \item Parallel components provide alternative execution paths.
+    \item Failure of one component does not necessarily stop the system.
+    \item Load balancing or failover logic is required to use healthy components.
+\end{itemize}
+
+\subsection*{Real-World Example}
+Two application servers operate behind a load balancer. If one server fails, the other server continues processing requests.
+
+\subsection*{Solved Problem}
+
+\textbf{Problem:} Calculate the availability of two parallel servers.
+
+\textbf{Given:}
+\begin{itemize}
+    \item Server \(A\) availability \(= 99.99\% = 0.9999\)
+    \item Server \(B\) availability \(= 99.99\% = 0.9999\)
+\end{itemize}
+
+\textbf{Find:} Total system availability.
+
+\textbf{Solution:}
+\[
+A_{\text{system}}
+=
+1-(1-0.9999)(1-0.9999)
+\]
+
+\[
+A_{\text{system}}
+=
+1-(0.0001)(0.0001)
+\]
+
+\[
+A_{\text{system}}
+=
+1-0.00000001
+=
+0.99999999
+\]
+
+\[
+A_{\text{system}}
+=
+99.999999\%
+\]
+
+\textbf{Final Answer:}
+\[
+\boxed{A_{\text{system}} = 99.999999\%}
+\]
+
+
+\section{Choosing an Availability Pattern}
+
+\subsection*{Definition}
+An availability pattern should be selected according to the component's state, consistency requirements, traffic load, recovery-time requirement, and infrastructure cost.
+
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\centering
+Use active-active for easily distributed workloads and active-passive when simpler state management is more important.
+}}
+\end{center}
+
+\begin{itemize}
+    \item Stateless application servers commonly use active-active deployment.
+    \item Stateful databases commonly use active-passive or primary-replica deployment.
+    \item Primary-primary replication is useful when writes must remain available in multiple locations.
+    \item Primary-replica replication is preferred when simpler consistency and read scaling are required.
+\end{itemize}
+
+\subsection*{Real-World Example}
+An e-commerce system may use active-active web servers behind a load balancer and an active-passive primary-replica database. The web servers provide scaling and rapid traffic redistribution, while the database avoids simultaneous write conflicts.
+
+\section{Background Tasks}
+
+\subsection*{Definition}
+
+A background task is work that runs outside the main user-facing request-response flow. It is used when work should continue without blocking the user interface or making the user wait for a long operation to finish.
+
+\[
+\boxed{\text{A background task runs separately from the main user request.}}
+\]
+
+\begin{itemize}
+    \item It usually runs in a separate worker process or service.
+    \item It is useful for slow, delayed, or non-critical work.
+    \item It improves perceived latency for the user.
+    \item Common examples include sending emails, processing files, generating reports, and running data pipelines.
+    \item Background tasks can be event-driven, scheduled, or polling-based.
+\end{itemize}
+
+\subsection*{Real-World System-Design Example}
+
+In a meeting-summary system, the user uploads a transcript through the main application. Instead of generating the full summary during the upload request, the system stores the transcript and lets background workers process it later.
+
+
+\section{Event-Driven Background Tasks}
+
+\subsection*{Definition}
+
+An event-driven background task is a background task that starts when a specific event occurs. The event may be a user action, database change, message arrival, file upload, or API call.
+
+\[
+\boxed{\text{Event-driven tasks run because an event occurred.}}
+\]
+
+\begin{itemize}
+    \item A producer creates an event, such as \texttt{OrderPlaced} or \texttt{FileUploaded}.
+    \item The event is published to a queue, message broker, or pub-sub system.
+    \item A background worker consumes the event and processes it.
+    \item Event-driven tasks are useful when the system must react quickly to new work.
+    \item They usually require retries, dead-letter queues, and idempotent processing.
+    \item They are more responsive than scheduled or polling-based tasks.
+\end{itemize}
+
+\subsection*{Real-World System-Design Example}
+
+In a food-delivery application, when a user places an order, the system publishes an \texttt{OrderPlaced} event. Background workers then notify the restaurant, process the payment, and start driver assignment.
+
+\subsection*{Important Distinction}
+
+An event-driven task is different from a polling-based task because the worker does not repeatedly check whether work exists. Instead, work is pushed to the worker through an event, queue, or message broker.
+
+
+\section{Scheduled Background Tasks}
+
+\subsection*{Definition}
+
+A scheduled background task is a background task that runs at a predefined time or fixed interval. It is triggered by a clock, cron job, or scheduling service.
+
+\[
+\boxed{\text{Scheduled tasks run because the configured time has arrived.}}
+\]
+
+\begin{itemize}
+    \item The task runs at a fixed time, such as every day at 2:00 AM.
+    \item It may also run at a fixed interval, such as every hour or every 10 minutes.
+    \item It runs whether or not new work has arrived.
+    \item It is useful for predictable maintenance work.
+    \item Common examples include backups, cleanup jobs, billing reports, and daily summaries.
+    \item It is simple and predictable, but may waste resources if there is no useful work.
+\end{itemize}
+
+\subsection*{Real-World System-Design Example}
+
+In a food-delivery platform, a scheduled job runs every night at 2:00 AM to calculate restaurant earnings and generate daily settlement reports.
+
+\subsection*{Important Distinction}
+
+A scheduled task is time-driven. The main reason it runs is not because new work appeared, but because the configured time or interval was reached.
+
+
+\section{Polling-Based Background Tasks}
+
+\subsection*{Definition}
+
+A polling-based background task is a background task that repeatedly checks a database, queue, API, or system condition to see whether there is work to do.
+
+\[
+\boxed{\text{Polling-based tasks repeatedly check for work and act only when work exists.}}
+\]
+
+\begin{itemize}
+    \item The worker runs continuously in the background.
+    \item It checks for eligible work at regular intervals.
+    \item If work exists, it processes the work.
+    \item If no work exists, it sleeps and checks again later.
+    \item It is useful when the system being monitored cannot directly publish events.
+    \item Short polling intervals reduce delay but increase resource usage.
+    \item Long polling intervals reduce resource usage but increase detection delay.
+\end{itemize}
+
+\subsection*{Real-World System-Design Example}
+
+In a meeting-summary system, a database worker checks every few seconds for meetings that have uploaded transcripts but missing summary artifacts. If it finds such meetings, it creates workflow tasks for the next processing stage.
+
+\subsection*{Important Distinction}
+
+Polling-based tasks are not purely scheduled tasks. A scheduled task runs because the time has arrived. A polling task wakes up repeatedly to check whether a condition has become true, and only performs meaningful work if the condition exists.
+
+
+\section{Comparison of Background Task Trigger Types}
+
+\subsection*{Definition}
+
+Background tasks can be classified by what triggers them: an event, a schedule, or repeated polling. The trigger model determines the task's latency, complexity, resource usage, and reliability requirements.
+
+\[
+\boxed{\text{The trigger model decides when a background task starts working.}}
+\]
+
+\begin{itemize}
+    \item Event-driven tasks are best when fast reaction is required.
+    \item Scheduled tasks are best when work must happen at predictable times.
+    \item Polling-based tasks are best when the system must detect state changes without direct event notifications.
+    \item In interviews, explain both the trigger mechanism and the trade-offs.
+\end{itemize}
+
+\subsection*{Real-World System-Design Example}
+
+In a food-delivery system, order placement can use event-driven workers, nightly settlement reports can use scheduled jobs, and stale-delivery detection can use polling workers.
+
+\section{Domain Name System (DNS)}
+
+\subsection*{Definition}
+The Domain Name System (DNS) is a distributed lookup system that translates human-readable domain names, such as \texttt{google.com}, into IP addresses that computers use to connect to servers.
+
+\[
+\boxed{\text{DNS does not fetch the web page; it only finds the IP address for a domain name.}}
+\]
+
+\begin{itemize}
+    \item A browser uses DNS when it needs to convert a domain name into an IP address.
+    \item DNS works like a phone book for the internet.
+    \item The browser first checks local cache before asking external DNS systems.
+    \item After receiving the IP address, the browser connects directly to the web server.
+\end{itemize}
+
+\subsection*{Real-World System-Design Example}
+When a user types \texttt{www.google.com} in the browser:
+\begin{itemize}
+    \item The browser checks whether it already knows the IP address.
+    \item If not, it asks the DNS resolver.
+    \item The DNS system returns the IP address for \texttt{www.google.com}.
+    \item The browser then uses that IP address to connect to Google's web server.
+\end{itemize}
+
+\subsection*{Important Distinction}
+\begin{itemize}
+    \item DNS resolves a domain name to an IP address.
+    \item The web server returns the actual web page content.
+    \item DNS is part of connection setup, not page rendering.
+\end{itemize}
+
+
+\section{DNS Lookup Flow}
+
+\subsection*{Definition}
+DNS lookup flow is the step-by-step process used to find the IP address of a domain name when it is not already available in cache.
+
+\[
+\boxed{\text{DNS lookup follows a hierarchy: browser cache, resolver, root server, TLD server, and authoritative server.}}
+\]
+
+\begin{itemize}
+    \item The browser first checks its own DNS cache.
+    \item If the answer is not found, the request goes to the operating system or router.
+    \item The request is usually forwarded to a recursive DNS resolver.
+    \item If the resolver does not know the answer, it queries DNS servers in a hierarchy.
+    \item The final IP address comes from the authoritative DNS server.
+\end{itemize}
+
+\subsection*{Real-World System-Design Example}
+For \texttt{www.example.com}:
+\begin{itemize}
+    \item The browser checks whether \texttt{www.example.com} is already cached.
+    \item If not cached, the request goes to the DNS resolver.
+    \item The resolver may ask a root server where to find \texttt{.com}.
+    \item The \texttt{.com} TLD server points to the authoritative server for \texttt{example.com}.
+    \item The authoritative server returns the IP address.
+    \item The browser connects to that IP address.
+\end{itemize}
+
+\subsection*{Important Distinction}
+\begin{itemize}
+    \item A root server does not usually return the final IP address.
+    \item A TLD server usually points to the domain's authoritative DNS server.
+    \item The authoritative DNS server provides the final DNS answer.
+\end{itemize}
+
+
+\section{Devices Involved in DNS Resolution}
+
+\subsection*{Definition}
+DNS resolution involves multiple devices and servers that cooperate to convert a domain name into an IP address.
+
+\[
+\boxed{\text{DNS resolution starts from the user's device and may pass through routers, resolvers, and DNS hierarchy servers.}}
+\]
+
+\begin{itemize}
+    \item The user's computer or phone starts the request.
+    \item The browser checks its DNS cache.
+    \item The operating system may also check its local DNS cache.
+    \item The home or office router may forward the DNS request.
+    \item A recursive DNS resolver performs the lookup on behalf of the user.
+    \item Root, TLD, and authoritative DNS servers may be contacted during the lookup.
+\end{itemize}
+
+\subsection*{Real-World System-Design Example}
+A laptop connected to home Wi-Fi opens \texttt{amazon.com}:
+\begin{itemize}
+    \item The laptop browser checks its cache.
+    \item The laptop sends the DNS request through the Wi-Fi router.
+    \item The router forwards the request to a DNS resolver.
+    \item The resolver finds the correct IP address.
+    \item The IP address is returned to the laptop.
+    \item The laptop browser connects to Amazon's server using that IP address.
+\end{itemize}
+
+\subsection*{Important Distinction}
+\begin{itemize}
+    \item The router usually forwards DNS traffic; it is not the full DNS system.
+    \item The recursive resolver performs the lookup work for the user.
+    \item The final website connection happens after DNS resolution is complete.
+\end{itemize}
+
+\section{Content Delivery Network (CDN)}
+
+\subsection*{Definition}
+A Content Delivery Network (CDN) is a distributed network of edge servers that stores and serves content closer to users instead of sending every request directly to the origin server.
+
+\[
+\boxed{\text{A CDN reduces latency by serving cached content from nearby edge servers.}}
+\]
+
+\begin{itemize}
+    \item The origin server is the main backend or storage system where the original content lives.
+    \item CDN edge servers are placed closer to users in different geographic locations.
+    \item If requested content is available at the edge server, the CDN returns it directly.
+    \item If the content is not available, the CDN fetches it from the origin server.
+    \item CDNs reduce latency, improve availability, and reduce load on the origin server.
+\end{itemize}
+
+\subsection*{Example}
+When a user in New York watches a Netflix video, the video is usually served from a nearby CDN edge server instead of Netflix's main origin servers. This reduces buffering and improves playback speed.
+
+\subsection*{Basic Request Flow}
+\begin{itemize}
+    \item User requests content, such as an image, video, or web page.
+    \item DNS resolves the request to a nearby CDN edge server.
+    \item CDN checks whether the content exists in its cache.
+    \item If cache hit, CDN serves the content directly.
+    \item If cache miss, CDN fetches content from the origin server and may cache it for future requests.
+\end{itemize}
+
+\section{Push CDN}
+
+\subsection*{Definition}
+A Push CDN is a CDN strategy where the origin system or administrator proactively uploads content to CDN edge servers before users request it.
+
+\[
+\boxed{\text{In a Push CDN, content is sent to the CDN before user demand arrives.}}
+\]
+
+\begin{itemize}
+    \item The origin system decides what content should be placed on CDN servers.
+    \item Useful when content is predictable and expected to be popular.
+    \item Reduces first-request delay because content is already present at the edge.
+    \item Requires careful management of updates, stale content, and storage usage.
+\end{itemize}
+
+\subsection*{Example}
+Before a major product launch, a company may push images, videos, and static files to CDN edge servers worldwide so users can download them quickly as soon as the launch goes live.
+
+\subsection*{When Push CDN Is Better}
+\begin{itemize}
+    \item Large files that many users will request.
+    \item Predictable content, such as movies, software updates, or launch assets.
+    \item Live event preparation where media segments or static assets need to be ready near users.
+\end{itemize}
+
+\section{Pull CDN}
+
+\subsection*{Definition}
+A Pull CDN is a CDN strategy where the CDN fetches content from the origin server only when a user requests it for the first time.
+
+\[
+\boxed{\text{In a Pull CDN, content is fetched on demand and then cached for future requests.}}
+\]
+
+\begin{itemize}
+    \item The first request may be slower because the CDN must contact the origin server.
+    \item Future requests are faster if the content remains cached.
+    \item Useful when content demand is unpredictable.
+    \item Avoids pushing unnecessary content to every edge server.
+\end{itemize}
+
+\subsection*{Example}
+If an Instagram user requests an image or video that is not already cached near them, the CDN may pull it from the origin server, cache it at the edge, and serve it faster to future users in the same region.
+
+\subsection*{When Pull CDN Is Better}
+\begin{itemize}
+    \item User-generated content.
+    \item Long-tail content where not every item is popular.
+    \item Systems where it is hard to predict which content users will request.
+\end{itemize}
+
+\subsection*{Push CDN vs Pull CDN}
+\begin{itemize}
+    \item Push CDN is origin-driven; content is sent before users request it.
+    \item Pull CDN is request-driven; content is fetched when users request it.
+    \item Push CDN is better for predictable, widely accessed content.
+    \item Pull CDN is better for unpredictable or user-generated content.
+\end{itemize}
+
+\section{Time To Live (TTL)}
+
+\subsection*{Definition}
+Time To Live (TTL) is the amount of time cached content is considered valid before the CDN must recheck or refresh it from the origin server.
+
+\[
+\boxed{\text{TTL controls how long cached content can be served before checking for freshness.}}
+\]
+
+\begin{itemize}
+    \item A longer TTL improves performance because the CDN contacts the origin less often.
+    \item A shorter TTL improves freshness because the CDN checks for updates more frequently.
+    \item TTL helps balance speed, origin load, and data correctness.
+    \item If TTL expires, the CDN may revalidate or refetch the content from the origin server.
+\end{itemize}
+
+\subsection*{Example}
+A website logo may have a long TTL because it rarely changes. A news homepage may have a short TTL because the content changes frequently.
+
+\section{CDN for Live Streaming}
+
+\subsection*{Definition}
+For live streaming, a CDN distributes small video segments to edge servers in near real time instead of caching one complete static file.
+
+\[
+\boxed{\text{Live CDN delivery is fast, continuous distribution of fresh video segments to users.}}
+\]
+
+\begin{itemize}
+    \item The live video feed is ingested by the streaming platform.
+    \item The video is broken into small segments.
+    \item CDN edge servers distribute these segments to nearby users.
+    \item The goal is low buffering, high availability, and scalable delivery.
+    \item Live streaming is less about long-term caching and more about fast real-time distribution.
+\end{itemize}
+
+\subsection*{Example}
+For a live Netflix boxing match, the video stream is processed into small live segments and delivered through CDN edge servers near viewers. This allows millions of users to watch the event without every request hitting the main origin servers directly.
+
+\section{CDN vs Data Center Replication}
+
+\subsection*{Definition}
+CDN caching and data center replication solve different problems. A CDN speeds up content delivery, while data center replication keeps backend data available across regions.
+
+\[
+\boxed{\text{Use CDNs for fast content delivery; use replication for backend data availability and consistency.}}
+\]
+
+\begin{itemize}
+    \item CDN is mainly used for static or cacheable content such as images, videos, JavaScript, CSS, and media files.
+    \item Replication is used for important backend data such as users, payments, orders, and application state.
+    \item CDN content may become stale depending on TTL and cache policies.
+    \item Replicated data can provide stronger consistency, but it is more expensive and complex.
+    \item Real systems often use both together.
+\end{itemize}
+
+\subsection*{Example}
+Netflix can replicate user account data across regions while using CDN edge servers to deliver video content. Account data needs correctness, but video delivery needs speed and scale.
+
+\end{document}

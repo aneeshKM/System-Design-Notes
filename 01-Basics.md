@@ -167,6 +167,53 @@ Average latency can hide a poor user experience for the slowest requests.
 Real systems commonly track percentile latency such as p50, p95, and p99
 alongside the average.
 
+### Percentile latency: p50, p95, and p99
+
+Percentile latency shows the latency distribution across many requests.
+
+- **p50 latency:** the median latency; 50% of requests finish within this
+  time.
+- **p95 latency:** 95% of requests finish within this time; the slowest 5%
+  take longer.
+- **p99 latency:** 99% of requests finish within this time; the slowest 1%
+  take longer.
+
+> p50 shows typical latency, while p95 and p99 expose the slow-user
+> experience.
+
+#### Example
+
+Suppose ten payment requests have these sorted latencies:
+
+```text
+100, 120, 150, 180, 200, 250, 300, 400, 800, 1,200 ms
+```
+
+Using the nearest-rank method, the percentile position is:
+
+```text
+Position = ⌈percentile × number of requests⌉
+```
+
+Therefore:
+
+```text
+p50 position = ⌈0.50 × 10⌉ = 5
+p50 latency = 200 ms
+
+p95 position = ⌈0.95 × 10⌉ = 10
+p95 latency = 1,200 ms
+
+p99 position = ⌈0.99 × 10⌉ = 10
+p99 latency = 1,200 ms
+```
+
+Most requests are fast, but a few are very slow. The average latency is 370
+ms, which does not clearly communicate that some users wait 800–1,200 ms.
+The p95 and p99 values make that tail latency visible.
+
+> Average latency can hide outliers; percentile latency exposes them.
+
 ### Queueing example
 
 A server processes 100 requests per second and 700 requests arrive

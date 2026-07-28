@@ -1554,4 +1554,209 @@ CDN caching and data center replication solve different problems. A CDN speeds u
 \subsection*{Example}
 Netflix can replicate user account data across regions while using CDN edge servers to deliver video content. Account data needs correctness, but video delivery needs speed and scale.
 
+\section{Load Balancer}
+
+\subsection*{Definition}
+A load balancer distributes incoming client requests across multiple backend servers to improve performance, scalability, and availability.
+
+\[
+\boxed{\text{A load balancer routes each request to an appropriate healthy server.}}
+\]
+
+\begin{itemize}
+    \item Prevents a single server from receiving all traffic.
+    \item Allows multiple servers to process requests in parallel.
+    \item Performs health checks to avoid routing traffic to failed servers.
+    \item Can operate at the transport layer or application layer.
+    \item Can reroute traffic when a server or regional load balancer fails.
+\end{itemize}
+
+\subsection*{Real-World Example}
+An e-commerce application has three application servers. Instead of sending every request to one server, a load balancer distributes customer requests among all three servers. If one server becomes unavailable, traffic is routed only to the remaining healthy servers.
+
+
+\subsection{Layer 4 Load Balancer}
+
+\subsection*{Definition}
+A Layer 4 load balancer operates at the transport layer and routes traffic using information such as source IP address, destination IP address, and port number.
+
+\[
+\boxed{\text{L4 routing uses network and transport information without inspecting application content.}}
+\]
+
+\begin{itemize}
+    \item Commonly handles TCP and UDP traffic.
+    \item Does not inspect URLs, cookies, or HTTP headers.
+    \item Provides fast and relatively simple traffic distribution.
+    \item Can be used for HTTP, database, gaming, or other TCP/UDP connections.
+\end{itemize}
+
+\subsection*{Real-World Example}
+A client creates a TCP connection to port 443. The L4 load balancer sees the destination IP and port and forwards the connection to Server A. The next TCP connection may be forwarded to Server B, regardless of the requested URL.
+
+
+\subsection{Layer 7 Load Balancer}
+
+\subsection*{Definition}
+A Layer 7 load balancer operates at the application layer and routes requests by inspecting application-level information such as URLs, HTTP headers, cookies, and request methods.
+
+\[
+\boxed{\text{L7 routing uses request content to select the appropriate backend service.}}
+\]
+
+\begin{itemize}
+    \item Understands application protocols such as HTTP and HTTPS.
+    \item Supports path-based and header-based routing.
+    \item Can route different application features to different server groups.
+    \item Provides more routing flexibility but requires more processing than L4.
+\end{itemize}
+
+\subsection*{Real-World Example}
+For an e-commerce application:
+\begin{itemize}
+    \item Requests to \texttt{/images} are routed to media servers.
+    \item Requests to \texttt{/login} are routed to authentication servers.
+    \item Requests to \texttt{/payments} are routed to payment servers.
+\end{itemize}
+
+\subsection*{L4 vs.\ L7 Load Balancing}
+
+\begin{center}
+\begin{tabular}{|p{3cm}|p{5cm}|p{5cm}|}
+\hline
+\textbf{Feature} & \textbf{Layer 4} & \textbf{Layer 7} \\ \hline
+Routing information & IP address and port & URL, headers, cookies, and request content \\ \hline
+Application awareness & No & Yes \\ \hline
+Processing & Faster and simpler & More flexible but more processing-intensive \\ \hline
+Example & Route TCP connections among servers & Route \texttt{/login} and \texttt{/images} to different services \\ \hline
+\end{tabular}
+\end{center}
+
+
+\section{Load-Balancing Algorithms}
+
+\subsection*{Definition}
+A load-balancing algorithm determines which backend server should receive each incoming request.
+
+\[
+\boxed{\text{The algorithm defines how traffic is distributed among available servers.}}
+\]
+
+\subsection*{Round-Robin}
+
+Round-robin sends requests to servers sequentially in a repeating order.
+
+\begin{itemize}
+    \item Request 1 goes to Server A.
+    \item Request 2 goes to Server B.
+    \item Request 3 goes to Server C.
+    \item Request 4 returns to Server A.
+    \item Works well when servers have similar capacity.
+\end{itemize}
+
+\subsection*{Least Connections}
+
+Least connections sends a new request to the server currently handling the fewest active connections.
+
+\begin{itemize}
+    \item Useful when requests have different processing durations.
+    \item Helps prevent a busy server from receiving additional traffic.
+    \item If Server A has 30 active connections and Server B has 25, the next connection is sent to Server B.
+\end{itemize}
+
+\subsection*{Weighted Load Balancing}
+
+Weighted load balancing assigns each server a weight according to its processing capacity.
+
+\begin{itemize}
+    \item More powerful servers receive a larger percentage of traffic.
+    \item Useful when backend servers have different hardware or capacities.
+    \item Weights can be combined with round-robin or least-connections routing.
+\end{itemize}
+
+\subsection*{Example}
+Suppose Server A has weight 2 and Server B has weight 1.
+
+\begin{itemize}
+    \item Server A receives approximately two out of every three requests.
+    \item Server B receives approximately one out of every three requests.
+\end{itemize}
+
+\subsection*{Geographic Routing}
+
+Geographic routing sends users to servers located in an appropriate geographic region.
+
+\begin{itemize}
+    \item European users can be routed to European servers.
+    \item Asian users can be routed to Asian servers.
+    \item North American users can be routed to North American servers.
+    \item Reduces long-distance network latency.
+\end{itemize}
+
+
+\subsection{Global and Regional Load Balancing}
+
+\subsection*{Definition}
+Global and regional load balancing uses multiple levels of load balancers to route users first to an appropriate geographic region and then to a server within that region.
+
+\[
+\boxed{\text{Global routing selects the region; regional routing selects the server.}}
+\]
+
+\begin{itemize}
+    \item A global routing system directs users to a nearby or healthy region.
+    \item Each region contains its own regional load balancer.
+    \item The regional load balancer distributes traffic among local servers.
+    \item Avoids sending every request through one distant centralized load balancer.
+    \item Different regions may use different load-balancing algorithms.
+\end{itemize}
+
+\subsection*{Real-World Example}
+A North American user is directed by a global routing layer to the North American region. The regional load balancer then uses least-connections routing to select one of the available application servers.
+
+A European user is directed to the European region, where the regional load balancer may use round-robin routing because all servers have similar capacity.
+
+
+\subsection{Load-Balancer Health Checks and Failover}
+
+\subsection*{Definition}
+Health checks allow a load balancer to determine whether backend servers or other load balancers are available. Failover redirects traffic when a component becomes unavailable.
+
+\[
+\boxed{\text{Health checks detect failure, and failover keeps traffic flowing through healthy components.}}
+\]
+
+\begin{itemize}
+    \item The load balancer periodically checks backend server health.
+    \item Unhealthy servers are temporarily removed from traffic distribution.
+    \item Traffic is restored when the server becomes healthy again.
+    \item A standby load balancer can replace a failed active load balancer.
+    \item Regional traffic can be redirected to another region during a regional failure.
+\end{itemize}
+
+\subsection*{Real-World Example}
+A regional load balancer manages three application servers. If Server B stops responding to health checks, the load balancer routes new requests only to Servers A and C.
+
+If the entire regional load balancer fails, a secondary load balancer or another region can receive the traffic.
+
+
+\subsection{Load-Balancer Replication}
+
+\subsection*{Definition}
+Load-balancer replication uses multiple load-balancer instances so that the load-balancing layer does not become a single point of failure.
+
+\[
+\boxed{\text{Multiple load balancers improve the availability of the traffic-routing layer.}}
+\]
+
+\begin{itemize}
+    \item Load balancers may operate in active--active or active--passive configurations.
+    \item In active--active, multiple load balancers handle traffic simultaneously.
+    \item In active--passive, one load balancer handles traffic while another remains on standby.
+    \item Configuration and routing information may be synchronized across instances.
+\end{itemize}
+
+\subsection*{Real-World Example}
+Two load balancers serve an application in an active--active configuration. Both receive client traffic and route requests to healthy backend servers. If one load balancer fails, the other continues handling incoming requests.
+
 \end{document}

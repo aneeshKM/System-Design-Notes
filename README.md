@@ -16,4 +16,5 @@ grow over time.
    polling-based work
 5. [DNS and Content Delivery Networks](05-DNS-and-CDN.md) — name resolution,
    edge caching, push and pull CDNs, TTL, and live streaming
-
+6. [Load Balancing](06-Load-Balancing.md) — Layer 4 and Layer 7 routing,
+   selection algorithms, health checks, failover, and replication

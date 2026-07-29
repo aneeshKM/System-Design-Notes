@@ -18,3 +18,6 @@ grow over time.
    edge caching, push and pull CDNs, TTL, and live streaming
 6. [Load Balancing](06-Load-Balancing.md) — Layer 4 and Layer 7 routing,
    selection algorithms, health checks, failover, and replication
+7. [Microservice Architecture](07-Microservice-Architecture.md) — monoliths,
+   service boundaries, data ownership, communication, resilience, and
+   incremental migration

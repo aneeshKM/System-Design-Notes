@@ -1759,4 +1759,296 @@ Load-balancer replication uses multiple load-balancer instances so that the load
 \subsection*{Real-World Example}
 Two load balancers serve an application in an active--active configuration. Both receive client traffic and route requests to healthy backend servers. If one load balancer fails, the other continues handling incoming requests.
 
+\section{Monolithic Architecture}
+
+\subsection*{Definition}
+A monolithic architecture packages the application's controllers, business logic, and data-access components into one deployable application.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Quick Revision:} A monolith is developed, deployed, and scaled as one application.}}
+\end{center}
+
+\begin{itemize}
+    \item All components usually run inside the same process or JVM.
+    \item The application is commonly packaged as one JAR, WAR, or container.
+    \item A load increase in one feature may require scaling the entire application.
+    \item A failure can affect the complete application.
+\end{itemize}
+
+\subsection*{Example}
+An e-commerce Spring Boot application contains user, product, order, payment, and notification service classes inside one project. If product traffic increases, another instance of the entire application must be deployed.
+
+\section{Microservices Architecture}
+
+\subsection*{Definition}
+A microservices architecture divides a system into small, independently deployable services, where each service handles a specific business capability.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Quick Revision:} A microservice is an independently deployable and independently scalable application.}}
+\end{center}
+
+\begin{itemize}
+    \item Each service runs as a separate process or container.
+    \item Services communicate through HTTP, gRPC, or messaging systems.
+    \item Each service can be deployed and scaled independently.
+    \item Services are loosely coupled but introduce network and operational complexity.
+\end{itemize}
+
+\subsection*{Example}
+An e-commerce system may contain separate Order, Payment, Inventory, and Notification microservices. During a sale, only the Order and Inventory services may require additional instances.
+
+\subsection*{Monolith vs.\ Microservices}
+
+\begin{center}
+\begin{tabular}{|p{0.28\linewidth}|p{0.30\linewidth}|p{0.30\linewidth}|}
+\hline
+\textbf{Property} & \textbf{Monolith} & \textbf{Microservices} \\
+\hline
+Deployment & Entire application together & Each service independently \\
+\hline
+Scaling & Entire application & Individual service \\
+\hline
+Communication & Direct method calls & Network calls or messages \\
+\hline
+Failure isolation & Lower & Higher \\
+\hline
+Operational complexity & Lower & Higher \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection*{Spring Boot Service Classes vs.\ Microservices}
+
+\subsection*{Definition}
+A Spring Boot service class is an internal Java component containing business logic, while a microservice is a complete, separately running and deployable application.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Quick Revision:} Multiple \texttt{@Service} classes inside one Spring Boot application are not multiple microservices.}}
+\end{center}
+
+\begin{itemize}
+    \item Service classes inside one application share the same JVM and deployment.
+    \item They are generally called through normal Java method calls.
+    \item They cannot normally be deployed or scaled independently.
+    \item Spring Boot can be used to build either a monolith or individual microservices.
+\end{itemize}
+
+\subsection*{Example}
+A Spring Boot project containing \texttt{UserService}, \texttt{EventService}, and \texttt{PaymentService} with one \texttt{main()} method is one monolithic application. To create independent microservices, each capability must become a separate Spring Boot application.
+
+\subsection*{API Gateway Pattern}
+
+\subsection*{Definition}
+The API Gateway pattern provides a single entry point through which clients access multiple backend microservices.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Quick Revision:} The API Gateway receives client requests and routes them to the correct microservice.}}
+\end{center}
+
+\begin{itemize}
+    \item Hides internal service locations from clients.
+    \item Performs request routing, authentication, rate limiting, and logging.
+    \item May combine responses from multiple services.
+    \item Can become a bottleneck if not replicated and scaled properly.
+\end{itemize}
+
+\subsection*{Example}
+An e-commerce client sends all requests to one gateway. The gateway routes \texttt{/users} to the User Service, \texttt{/orders} to the Order Service, and \texttt{/payments} to the Payment Service.
+
+\subsection*{Database per Service Pattern}
+
+\subsection*{Definition}
+The Database per Service pattern gives each microservice ownership of its own data store and prevents other services from directly modifying that data.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Quick Revision:} Each microservice owns its data and exposes it through APIs or events.}}
+\end{center}
+
+\begin{itemize}
+    \item Reduces database-level coupling between services.
+    \item Allows each service to choose an appropriate database technology.
+    \item Prevents one service from depending directly on another service's schema.
+    \item Makes cross-service transactions and joins more difficult.
+\end{itemize}
+
+\subsection*{Example}
+The Order Service stores order data in its database, while the Payment Service stores payment data separately. The Order Service requests payment information through the Payment Service API instead of querying its database directly.
+
+\subsection*{Saga Pattern}
+
+\subsection*{Definition}
+The Saga pattern manages a business transaction across multiple microservices as a sequence of local transactions, with compensating transactions used to undo completed steps when a later step fails.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Quick Revision:} A Saga replaces one distributed transaction with local transactions and compensating actions.}}
+\end{center}
+
+\begin{itemize}
+    \item Each microservice updates only its own database.
+    \item Successful steps trigger the next step in the workflow.
+    \item A failure triggers compensating operations.
+    \item Compensation is a business-level undo operation, not a database rollback.
+\end{itemize}
+
+\subsection*{Example}
+For an online order:
+\begin{enumerate}
+    \item The Order Service creates the order.
+    \item The Payment Service charges the customer.
+    \item The Inventory Service reserves the item.
+    \item The Shipping Service creates the shipment.
+\end{enumerate}
+
+If inventory reservation fails after payment succeeds, the Payment Service refunds the customer and the Order Service cancels the order.
+
+\subsection*{Saga Choreography vs.\ Orchestration}
+
+\begin{center}
+\begin{tabular}{|p{0.25\linewidth}|p{0.33\linewidth}|p{0.33\linewidth}|}
+\hline
+\textbf{Property} & \textbf{Choreography} & \textbf{Orchestration} \\
+\hline
+Control & Distributed among services & Central orchestrator controls workflow \\
+\hline
+Communication & Events & Commands and responses \\
+\hline
+Advantage & Loose coupling & Workflow is easier to understand \\
+\hline
+Limitation & Difficult to trace complex flows & Orchestrator may become complex \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection*{Circuit Breaker Pattern}
+
+\subsection*{Definition}
+The Circuit Breaker pattern temporarily stops requests to an unhealthy service after repeated failures, preventing resource exhaustion and cascading failures.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Quick Revision:} A circuit breaker fails fast instead of repeatedly calling an unavailable service.}}
+\end{center}
+
+\begin{itemize}
+    \item \textbf{Closed:} Requests are allowed normally.
+    \item \textbf{Open:} Requests fail immediately without calling the service.
+    \item \textbf{Half-open:} A limited test request checks whether the service recovered.
+    \item Commonly combined with timeouts, retries, and fallback responses.
+\end{itemize}
+
+\subsection*{Example}
+If the Payment Service repeatedly times out, the Order Service opens its circuit breaker and temporarily rejects payment requests instead of waiting for repeated network timeouts.
+
+\section{Service Discovery Pattern}
+
+\subsection*{Definition}
+The Service Discovery pattern allows services to locate available instances of another service without storing fixed IP addresses.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Quick Revision:} Service discovery maps a logical service name to its currently available instances.}}
+\end{center}
+
+\begin{itemize}
+    \item Service instances may be created, removed, or assigned new addresses.
+    \item A service registry or orchestration platform tracks healthy instances.
+    \item Client-side or server-side load balancing selects an instance.
+    \item Kubernetes commonly provides discovery through Services and internal DNS.
+\end{itemize}
+
+\subsection*{Example}
+The Order Service calls \texttt{payment-service} rather than a fixed server IP. Service discovery resolves the name to one of the available Payment Service instances.
+
+\section{Event-Driven Communication Pattern}
+
+\subsection*{Definition}
+Event-driven communication allows a service to publish an event that can be consumed asynchronously by one or more interested services.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Quick Revision:} Publishers announce what happened without directly calling every consumer.}}
+\end{center}
+
+\begin{itemize}
+    \item Producers and consumers are loosely coupled.
+    \item Multiple services can react to the same event.
+    \item Message brokers such as Kafka can store and distribute events.
+    \item Consumers must handle duplicate, delayed, or out-of-order events.
+\end{itemize}
+
+\subsection*{Example}
+After completing an order, the Order Service publishes an \texttt{OrderCompleted} event. Notification, Analytics, and Loyalty services consume the event independently.
+
+\section{Timeout and Retry Patterns}
+
+\subsection*{Definition}
+A timeout limits how long a service waits for a response, while a retry repeats a failed operation when the failure may be temporary.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Quick Revision:} Timeouts prevent indefinite waiting, while limited retries handle temporary failures.}}
+\end{center}
+
+\begin{itemize}
+    \item Every network request should have a reasonable timeout.
+    \item Retries should be limited and use increasing delays.
+    \item Excessive retries can increase load during an outage.
+    \item Retried operations should be idempotent whenever possible.
+\end{itemize}
+
+\subsection*{Example}
+The Order Service waits two seconds for the Payment Service. If the request fails temporarily, it retries twice with increasing delays before returning an error.
+
+\subsection*{Bulkhead Pattern}
+
+\subsection*{Definition}
+The Bulkhead pattern isolates resources used by different operations so that failure or overload in one area does not exhaust resources required by the entire application.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Quick Revision:} Bulkheads limit the damage caused by one slow or failing dependency.}}
+\end{center}
+
+\begin{itemize}
+    \item Separates thread pools, connection pools, or concurrency limits.
+    \item Prevents one dependency from consuming all application resources.
+    \item Improves fault isolation and availability.
+    \item Resource limits must be configured according to expected traffic.
+\end{itemize}
+
+\subsection*{Example}
+An application reserves separate thread pools for Payment and Product requests. If Payment requests become slow, Product requests can still be processed.
+
+\section{CQRS Pattern}
+
+\subsection*{Definition}
+Command Query Responsibility Segregation separates operations that modify data from operations that read data.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Quick Revision:} CQRS uses separate models or paths for writes and reads.}}
+\end{center}
+
+\begin{itemize}
+    \item Commands create, update, or delete data.
+    \item Queries retrieve data without modifying it.
+    \item Read and write workloads can be optimized and scaled separately.
+    \item Separate read models may temporarily lag behind the write model.
+\end{itemize}
+
+\subsection*{Example}
+An order system sends order creation and cancellation commands to a write database, while customer order-history requests are served from a separate read-optimized database.
+
+\section{Strangler Fig Pattern}
+
+\subsection*{Definition}
+The Strangler Fig pattern gradually replaces parts of a monolithic application with new services instead of rewriting the entire system at once.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Quick Revision:} Extract monolithic functionality incrementally until the old implementation can be removed.}}
+\end{center}
+
+\begin{itemize}
+    \item New requests are gradually routed to extracted services.
+    \item Unchanged functionality continues running in the monolith.
+    \item Reduces the risk of a complete system rewrite.
+    \item Requires temporary integration between the monolith and new services.
+\end{itemize}
+
+\subsection*{Example}
+A company first extracts payment processing from its e-commerce monolith into a Payment microservice. It later extracts Inventory and Order services while the remaining features continue running in the monolith.
 \end{document}

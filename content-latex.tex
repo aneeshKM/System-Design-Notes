@@ -2051,4 +2051,498 @@ The Strangler Fig pattern gradually replaces parts of a monolithic application w
 
 \subsection*{Example}
 A company first extracts payment processing from its e-commerce monolith into a Payment microservice. It later extracts Inventory and Order services while the remaining features continue running in the monolith.
+
+\section{Relational and NoSQL Databases}
+
+\subsection*{Definition}
+Relational databases store structured data in tables with predefined schemas, while NoSQL databases use flexible models such as key-value, document, wide-column, and graph storage.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Revision:} SQL databases emphasize relationships, constraints, and transactions; NoSQL databases emphasize flexible schemas and distributed scalability.}}
+\end{center}
+
+\begin{itemize}
+\item SQL databases support tables, joins, foreign keys, constraints, and ACID transactions.
+\item Examples include PostgreSQL, MySQL, Oracle, and SQL Server.
+\item NoSQL databases are commonly selected for flexible schemas, high-volume workloads, or horizontal scaling.
+\item NoSQL does not mean that SQL-like querying is always unavailable.
+\item Large systems commonly use multiple database types for different workloads.
+\end{itemize}
+
+\subsection*{Example}
+An e-commerce platform may use PostgreSQL for orders and payments, MongoDB for the product catalog, Redis for shopping carts, Cassandra for activity events, and a graph database for recommendations.
+
+\section{ACID Properties}
+
+\subsection*{Definition}
+ACID properties ensure that database transactions execute reliably while preserving application-defined constraints during failures and concurrent operations.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Revision:} ACID stands for Atomicity, Consistency, Isolation, and Durability.}}
+\end{center}
+
+\begin{itemize}
+\item \textbf{Atomicity:} Either every operation in a transaction succeeds or the entire transaction is rolled back.
+\item \textbf{Consistency:} A transaction preserves database constraints and invariants.
+\item \textbf{Isolation:} Concurrent transactions behave according to a defined isolation level and do not improperly interfere.
+\item \textbf{Durability:} Once committed, data remains stored even after a crash.
+\end{itemize}
+
+\subsection*{Example}
+During a bank transfer, deducting money from one account and crediting another must occur as one transaction. A partial transfer must never be committed.
+
+\subsection*{Important Distinction}
+ACID consistency refers to preserving database rules. CAP consistency refers to distributed replicas presenting a single up-to-date view of data.
+
+\section{Database Normalization}
+
+\subsection*{Definition}
+Normalization organizes relational data into separate tables to reduce unnecessary duplication and prevent update, insertion, and deletion anomalies.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Revision:} Normalization reduces redundancy by storing each fact in an appropriate table.}}
+\end{center}
+
+\begin{itemize}
+\item \textbf{First Normal Form (1NF):} Each column contains an atomic value, with no repeating groups.
+\item \textbf{Second Normal Form (2NF):} The table is in 1NF and every non-key attribute depends on the complete composite key.
+\item \textbf{Third Normal Form (3NF):} The table is in 2NF and contains no transitive dependency between non-key attributes.
+\item BCNF, 4NF, and 5NF address more advanced dependency cases.
+\end{itemize}
+
+\subsection*{Example}
+Instead of repeatedly storing a department phone number in every student row, the database stores departments separately and references them through a department identifier.
+
+\begin{verbatim}
+Student(student_id, name, department_id)
+Department(department_id, department_name, phone)
+\end{verbatim}
+
+\section{Key-Value Databases}
+
+\subsection*{Definition}
+A key-value database stores each value under a unique key and retrieves it primarily through direct key lookup.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Revision:} A key-value store behaves like a distributed dictionary optimized for fast lookups.}}
+\end{center}
+
+\begin{itemize}
+\item The key uniquely identifies the stored value.
+\item Values may contain strings, numbers, lists, sets, or serialized objects.
+\item Queries are generally based on keys rather than arbitrary internal fields.
+\item Common examples include Redis and Amazon DynamoDB.
+\end{itemize}
+
+\subsection*{Example}
+An e-commerce application can store a shopping cart using the user identifier as the key.
+
+\begin{verbatim}
+Key: cart:user:101
+Value: {items: [901, 902], total_items: 2}
+\end{verbatim}
+
+\section{Document Databases}
+
+\subsection*{Definition}
+A document database stores records as self-contained JSON-like documents whose fields may be nested and may vary between documents.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Revision:} Document databases store flexible objects and allow queries on fields inside those objects.}}
+\end{center}
+
+\begin{itemize}
+\item Documents are grouped into collections.
+\item Documents in the same collection do not require identical fields.
+\item Nested objects and arrays can be stored directly.
+\item Fields can be queried, projected, sorted, aggregated, and indexed.
+\item MongoDB is a document database, not merely a key-value database.
+\end{itemize}
+
+\subsection*{Example}
+A MongoDB product collection can store different attributes for different product categories.
+
+\begin{verbatim}
+{
+"_id": 901,
+"name": "Laptop",
+"specifications": {
+"ram": "16 GB",
+"storage": "1 TB"
+},
+"tags": ["electronics", "computer"]
+}
+\end{verbatim}
+
+\subsection*{MongoDB Query Example}
+
+\begin{verbatim}
+db.products.find(
+{"specifications.ram": "16 GB"},
+{"name": 1, "specifications": 1, "_id": 0}
+)
+\end{verbatim}
+
+\section{Wide-Column Databases}
+
+\subsection*{Definition}
+A wide-column database stores data using partition keys, rows, and flexible groups of columns optimized for distributed storage and high write throughput.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Revision:} Wide-column databases organize data around partition keys and query-specific access patterns.}}
+\end{center}
+
+\begin{itemize}
+\item Related rows are grouped using a partition key.
+\item Different rows may contain different columns.
+\item Data models are designed around known queries rather than joins.
+\item Common examples include Cassandra and HBase.
+\item They are suitable for large-scale event, logging, and time-series workloads.
+\end{itemize}
+
+\subsection*{Example}
+A Cassandra table may store sensor readings by device and timestamp.
+
+\begin{verbatim}
+device_id | timestamp | temperature | battery
+---------------------------------------------
+
+A101      | 10:00     | 24.5        | 91
+A101      | 10:05     | 25.0        | 90
+\end{verbatim}
+
+All readings for the same device can be stored together and retrieved efficiently.
+
+\section{Graph Databases}
+
+\subsection*{Definition}
+A graph database represents entities as nodes and relationships between entities as edges.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Revision:} Graph databases are optimized for traversing relationships rather than repeatedly joining tables.}}
+\end{center}
+
+\begin{itemize}
+\item Nodes represent entities such as users, products, or companies.
+\item Edges represent relationships such as \texttt{FRIEND_OF}, \texttt{BOUGHT}, or \texttt{WORKS_AT}.
+\item Nodes and edges may contain properties.
+\item Common use cases include fraud detection, social networks, knowledge graphs, and recommendations.
+\item Neo4j is a common graph database.
+\end{itemize}
+
+\subsection*{Example}
+
+\begin{verbatim}
+(Alice)-[:BOUGHT]->(Laptop)
+(Bob)-[:BOUGHT]->(Laptop)
+(Bob)-[:BOUGHT]->(Mouse)
+\end{verbatim}
+
+The system can recommend the mouse to Alice by traversing purchases made by users with similar behavior.
+
+\section{Database Replication}
+
+\subsection*{Definition}
+Replication maintains copies of the same database records on multiple nodes to improve availability, fault tolerance, geographic access, and read scalability.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Revision:} Replication copies the same data across nodes; it does not divide the dataset.}}
+\end{center}
+
+\begin{itemize}
+\item In primary-replica replication, clients send writes to the primary node.
+\item The primary propagates committed changes to one or more replicas.
+\item Replicas may serve read requests, although asynchronous replicas can return stale data.
+\item If the primary fails, an eligible replica can be promoted.
+\item In multi-primary replication, multiple nodes accept writes and conflicts must be resolved.
+\item Replication is not a replacement for backups because accidental deletions can also be replicated.
+\end{itemize}
+
+\subsection*{Synchronous and Asynchronous Replication}
+
+\begin{itemize}
+\item \textbf{Synchronous replication:} The primary waits for replica acknowledgement before confirming the write.
+\item \textbf{Asynchronous replication:} The primary confirms the write before every replica receives it.
+\item Synchronous replication reduces data-loss risk but increases latency.
+\item Asynchronous replication improves performance but introduces replication lag.
+\end{itemize}
+
+\subsection*{Example}
+A PostgreSQL order database may have one primary and two read replicas. Writes go to the primary, while order-history queries can be distributed across the replicas.
+
+\section{Database Sharding}
+
+\subsection*{Definition}
+Sharding horizontally partitions a large dataset and stores different subsets of the data on different database servers.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Revision:} Sharding distributes different data across nodes to scale storage and traffic horizontally.}}
+\end{center}
+
+\begin{itemize}
+\item A shard key determines where each record is stored.
+\item Queries containing the shard key can be routed directly to the correct shard.
+\item Queries without the shard key may contact every shard.
+\item Cross-shard joins and transactions are more complex.
+\item Poor shard keys can create uneven load or hot shards.
+\item Each shard can also be replicated for availability.
+\end{itemize}
+
+\subsection*{Example}
+An order system can shard records using a hash of \texttt{customer_id}.
+
+\begin{verbatim}
+shard_number = hash(customer_id) mod number_of_shards
+\end{verbatim}
+
+All orders for customer 101 can be routed to the shard calculated from that customer's identifier.
+
+\subsection*{Replication versus Sharding}
+
+\begin{itemize}
+\item Replication stores copies of the same data.
+\item Sharding stores different portions of the data.
+\item Replication mainly improves availability and read capacity.
+\item Sharding mainly improves storage capacity and distributed throughput.
+\end{itemize}
+
+\section{Database Federation}
+
+\subsection*{Definition}
+Database federation, also called functional partitioning, separates data into independent databases according to business domains.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Revision:} Federation separates databases by business responsibility, while sharding divides records within one large dataset.}}
+\end{center}
+
+\begin{itemize}
+\item Related tables are grouped by domain rather than creating one database for every table.
+\item Each domain can scale and deploy independently.
+\item Failures can be isolated to one business function.
+\item Cross-database joins and transactions become more difficult.
+\item Different domains may use different database technologies.
+\end{itemize}
+
+\subsection*{Example}
+An e-commerce platform may use separate databases for customers, products, orders, and payments.
+
+\begin{verbatim}
+Customer Database: customers, addresses, preferences
+Order Database: orders, order_items, shipments
+Payment Database: payments, refunds, payment_attempts
+\end{verbatim}
+
+\section{Database Denormalization}
+
+\subsection*{Definition}
+Denormalization intentionally duplicates or embeds selected data to reduce joins and improve read performance.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Revision:} Denormalization exchanges additional storage and update complexity for faster reads.}}
+\end{center}
+
+\begin{itemize}
+\item Frequently accessed data can be copied into the same row or document.
+\item Reads become simpler because fewer joins or network calls are required.
+\item Updates become harder because duplicated values may need synchronization.
+\item Denormalization should follow actual query patterns.
+\item Historical snapshots are a useful form of intentional duplication.
+\end{itemize}
+
+\subsection*{SQL Example}
+A normalized order query may join \texttt{orders}, \texttt{customers}, \texttt{order_items}, and \texttt{products}. A denormalized order can store the customer name and product name at purchase time.
+
+\begin{verbatim}
+orders(
+order_id,
+customer_id,
+customer_name_at_purchase,
+total
+)
+
+order_items(
+order_id,
+product_id,
+product_name_at_purchase,
+unit_price_at_purchase
+)
+\end{verbatim}
+
+\subsection*{MongoDB Example}
+MongoDB can embed order items and customer snapshot data inside one order document.
+
+\begin{verbatim}
+{
+"_id": 5001,
+"customerSnapshot": {
+"customerId": 101,
+"name": "Alice"
+},
+"items": [
+{
+"productId": 901,
+"productName": "Laptop",
+"unitPrice": 1000
+}
+]
+}
+\end{verbatim}
+
+\section{Database Indexing}
+
+\subsection*{Definition}
+An index is an additional data structure that allows a database to locate matching rows or documents without scanning the complete dataset.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Revision:} Indexes speed up reads but consume storage and add overhead to writes.}}
+\end{center}
+
+\begin{itemize}
+\item Indexes are useful for frequently filtered, joined, sorted, or uniquely constrained fields.
+\item A full table or collection scan examines every record.
+\item A composite index contains multiple fields, and field order matters.
+\item Excessive indexes slow inserts, updates, and deletes.
+\item Indexes should be created according to real query patterns.
+\end{itemize}
+
+\subsection*{SQL Example}
+
+\begin{verbatim}
+CREATE UNIQUE INDEX idx_customers_email
+ON customers(email);
+
+CREATE INDEX idx_orders_customer_created
+ON orders(customer_id, created_at DESC);
+\end{verbatim}
+
+The second index supports retrieving a customer's newest orders efficiently.
+
+\subsection*{MongoDB Example}
+
+\begin{verbatim}
+db.customers.createIndex(
+{email: 1},
+{unique: true}
+)
+
+db.orders.createIndex({
+customerId: 1,
+createdAt: -1
+})
+\end{verbatim}
+
+\subsection*{Important Distinction}
+A primary key identifies a record and normally creates an index automatically. An ordinary index improves access speed but does not necessarily enforce uniqueness.
+
+\section{SQL Query Tuning}
+
+\subsection*{Definition}
+SQL query tuning improves database performance by examining execution plans and optimizing queries, indexes, joins, schema design, and data access patterns.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Revision:} SQL tuning begins with measuring the execution plan rather than guessing which query is slow.}}
+\end{center}
+
+\begin{itemize}
+\item Use \texttt{EXPLAIN} or \texttt{EXPLAIN ANALYZE} to inspect the execution plan.
+\item Add indexes for important filters, joins, and sorting operations.
+\item Retrieve only required columns instead of using \texttt{SELECT *}.
+\item Filter rows as early as possible.
+\item Avoid unnecessary joins and repeated calculations.
+\item Use suitable pagination, caching, summary tables, or materialized views where appropriate.
+\item Keep database statistics updated so the optimizer can estimate row counts accurately.
+\end{itemize}
+
+\subsection*{Example}
+
+\begin{verbatim}
+EXPLAIN ANALYZE
+SELECT
+o.order_id,
+o.status,
+o.total,
+o.created_at
+FROM customers AS c
+JOIN orders AS o
+ON o.customer_id = c.customer_id
+WHERE c.email = '[alice@example.com](mailto:alice@example.com)'
+ORDER BY o.created_at DESC
+LIMIT 20;
+\end{verbatim}
+
+Useful supporting indexes are:
+
+\begin{verbatim}
+CREATE UNIQUE INDEX idx_customers_email
+ON customers(email);
+
+CREATE INDEX idx_orders_customer_created
+ON orders(customer_id, created_at DESC);
+\end{verbatim}
+
+\section{Join Order and Early Filtering}
+
+\subsection*{Definition}
+Join optimization reduces the size of intermediate results by filtering selective data before joining it with much larger tables.
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Revision:} Reduce the dataset before performing an expensive join whenever the execution plan permits it.}}
+\end{center}
+
+\begin{itemize}
+\item Joining large tables before applying selective filters can produce huge intermediate results.
+\item Joining a small filtered result with larger tables usually requires less work.
+\item Modern SQL optimizers can reorder inner joins automatically.
+\item Changing the written join order alone may not change the execution plan.
+\item The actual plan must be verified using \texttt{EXPLAIN ANALYZE}.
+\end{itemize}
+
+\subsection*{Expensive Query}
+
+\begin{verbatim}
+SELECT
+o.order_id,
+p.product_name,
+oi.quantity
+FROM order_items AS oi
+JOIN products AS p
+ON p.product_id = oi.product_id
+JOIN orders AS o
+ON o.order_id = oi.order_id
+WHERE o.customer_id = 101;
+\end{verbatim}
+
+This plan can be expensive if a large \texttt{order_items}--\texttt{products} result is created before filtering the customer's orders.
+
+\subsection*{Improved Query}
+
+\begin{verbatim}
+SELECT
+filtered_orders.order_id,
+p.product_name,
+oi.quantity
+FROM (
+SELECT order_id
+FROM orders
+WHERE customer_id = 101
+) AS filtered_orders
+JOIN order_items AS oi
+ON oi.order_id = filtered_orders.order_id
+JOIN products AS p
+ON p.product_id = oi.product_id;
+\end{verbatim}
+
+The query first identifies a small number of orders and then joins only their order items and products.
+
+\subsection*{Supporting Indexes}
+
+\begin{verbatim}
+CREATE INDEX idx_orders_customer
+ON orders(customer_id, order_id);
+
+CREATE INDEX idx_order_items_order
+ON order_items(order_id);
+\end{verbatim}
+
+
 \end{document}

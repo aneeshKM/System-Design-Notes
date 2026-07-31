@@ -21,3 +21,9 @@ grow over time.
 7. [Microservice Architecture](07-Microservice-Architecture.md) — monoliths,
    service boundaries, data ownership, communication, resilience, and
    incremental migration
+8. [Database Models and Properties](08-Database-Models-and-Properties.md) —
+   relational and NoSQL databases, ACID, normalization, and specialized data
+   models
+9. [Database Scaling and Performance](09-Database-Scaling-and-Performance.md) —
+   replication, sharding, federation, denormalization, indexing, and query
+   tuning

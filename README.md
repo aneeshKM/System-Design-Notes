@@ -27,3 +27,5 @@ grow over time.
 9. [Database Scaling and Performance](09-Database-Scaling-and-Performance.md) —
    replication, sharding, federation, denormalization, indexing, and query
    tuning
+10. [Cache Strategies](10-Cache-Strategies.md) — cache fundamentals, TTL,
+    refresh-ahead, write-through, write-behind, cache-aside, and cache placement

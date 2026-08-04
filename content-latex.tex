@@ -2544,5 +2544,198 @@ CREATE INDEX idx_order_items_order
 ON order_items(order_id);
 \end{verbatim}
 
+\section{Cache}
+
+\subsection*{Definition}
+A cache is a temporary, high-speed storage layer that keeps copies of frequently or recently accessed data closer to the requester. It reduces retrieval latency and decreases repeated load on the primary data source.
+
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\textbf{Revision:} A cache improves performance by serving reusable data from faster storage instead of repeatedly accessing the source of truth.}}
+\end{center}
+
+\begin{itemize}
+\item Cached data is usually a copy of data stored in a database, API, file system, or origin server.
+\item The primary database or origin server normally remains the source of truth.
+\item Caching mainly improves latency and reduces backend load.
+\item It may improve availability when cached data can be served during a temporary backend failure.
+\item Cached data may become stale if the source changes before the cache is updated.
+\end{itemize}
+
+\subsection*{Real-World Example}
+An e-commerce application stores frequently requested product details in Redis. When another user opens the same product page, the application retrieves the details from Redis instead of querying the database again.
+
+\section{Time-to-Live (TTL)}
+
+\subsection*{Definition}
+Time-to-Live is the duration for which a cached entry remains valid. After its TTL expires, the entry is considered invalid and must normally be removed or refreshed before being served again.
+
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\textbf{Revision:} TTL controls how long cached data may be reused before it must be refreshed from the source of truth.}}
+\end{center}
+
+\begin{itemize}
+\item A short TTL provides fresher data but causes more database or origin requests.
+\item A long TTL reduces backend load but increases the possibility of stale data.
+\item An expired entry may be deleted immediately, during the next access, or through background cleanup.
+\item The first request after expiration may cause a cache miss.
+\item Many popular entries expiring together can create a sudden increase in backend traffic.
+\end{itemize}
+
+\subsection*{Real-World Example}
+A weather API response is cached for five minutes. Requests arriving during those five minutes use the cached response, while the first request after expiration fetches updated weather data from the API.
+
+\section{Refresh-Ahead Caching}
+
+\subsection*{Definition}
+Refresh-ahead caching proactively reloads frequently accessed data from the source of truth shortly before its TTL expires.
+
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\textbf{Revision:} Refresh-ahead updates popular cache entries before expiration to reduce cache misses and backend load.}}
+\end{center}
+
+\begin{itemize}
+\item The system identifies frequently accessed or important entries.
+\item A background process refreshes an entry before its expiration time.
+\item Users can continue receiving data from the cache without waiting for a database query.
+\item It reduces latency spikes caused by popular entries expiring.
+\item It may waste resources if refreshed data is not requested again.
+\item The cache can still temporarily contain stale data if the source changes between refreshes.
+\end{itemize}
+
+\subsection*{Real-World Example}
+A news application refreshes its homepage headlines in the cache every few minutes before their TTL expires. Users continue receiving the cached homepage while the refresh occurs in the background.
+
+\section{Write-Behind Caching}
+
+\subsection*{Definition}
+Write-behind caching writes data to the cache first and updates the primary database asynchronously through a background process, queue, or worker.
+
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\textbf{Revision:} Write-behind provides fast writes by delaying database persistence, but introduces consistency and data-loss risks.}}
+\end{center}
+
+\begin{itemize}
+\item The application writes the new value to the cache.
+\item Success may be returned before the database is updated.
+\item A background worker later persists the change to the database.
+\item Subsequent reads can immediately receive the latest cached value.
+\item Write latency is lower because the application does not wait for the database.
+\item The cache and database remain temporarily inconsistent.
+\item Retries, ordering, duplicate writes, and failure recovery must be handled carefully.
+\end{itemize}
+
+\subsection*{Data-Loss Risk}
+If the cache or background worker fails before the asynchronous database write completes, an acknowledged update may be lost. Durable queues, replication, and persistent logs can reduce this risk.
+
+\subsection*{Real-World Example}
+An analytics system records view counts in Redis and periodically writes aggregated counts to the database. This supports a high write rate, but recent counts could be lost if Redis fails before they are persisted.
+
+\section{Write-Through Caching}
+
+\subsection*{Definition}
+Write-through caching synchronously updates the primary database when data is written through the cache. The write is acknowledged only after the database update succeeds.
+
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\textbf{Revision:} Write-through keeps the cache and database synchronized by persisting every write before returning success.}}
+\end{center}
+
+\begin{itemize}
+\item The application sends the write through the cache layer.
+\item The cache synchronously writes the value to the database.
+\item The cache stores the updated value after a successful database write.
+\item Future reads can retrieve the recently written value from the cache.
+\item Write latency is higher because the client waits for database persistence.
+\item The risk of losing an acknowledged write is lower than with write-behind.
+\end{itemize}
+
+\subsection*{Important Distinction}
+Write-through describes the write path. Read-through caching describes a read path in which the cache itself fetches missing data from the database.
+
+\subsection*{Real-World Example}
+A banking application updates a user's account preferences through a write-through cache. The cache does not confirm the update until the preferences are successfully stored in the database.
+
+\section{Cache-Aside Caching}
+
+\subsection*{Definition}
+Cache-aside is a caching strategy in which the application explicitly manages cache reads, cache misses, and cache invalidation.
+
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\textbf{Revision:} In cache-aside, the application checks the cache first and loads data from the database only when necessary.}}
+\end{center}
+
+\subsection*{Read Flow}
+\begin{itemize}
+\item The application first checks the cache.
+\item On a cache hit, it returns the cached value.
+\item On a cache miss, it queries the database.
+\item The application stores the database result in the cache.
+\item The result is returned to the user.
+\end{itemize}
+
+\subsection*{Write Flow}
+\begin{itemize}
+\item The application updates the database.
+\item It deletes or invalidates the corresponding cache entry.
+\item The next read reloads the updated value into the cache.
+\end{itemize}
+
+\subsection*{Limitations}
+\begin{itemize}
+\item The first request after expiration has higher latency.
+\item Stale data may be served if invalidation is delayed or fails.
+\item Many simultaneous cache misses can create a cache stampede.
+\item The application must contain additional cache-management logic.
+\end{itemize}
+
+\subsection*{Real-World Example}
+A product service checks Redis for product information. If the product is missing, the service reads it from PostgreSQL, stores it in Redis, and returns it to the user. When the product changes, the service updates PostgreSQL and removes the old Redis entry.
+
+\section{Caching Locations and Use Cases}
+
+\subsection*{Definition}
+Caching can be implemented at different layers of a system depending on where data is requested, processed, and reused.
+
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\textbf{Revision:} Caches may exist on the client, CDN, web server, application layer, or inside the database.}}
+\end{center}
+
+\subsection*{Client-Side Cache}
+\begin{itemize}
+\item Stored on the user's browser, mobile device, or local application memory.
+\item Commonly stores images, JavaScript, CSS, API responses, and application data.
+\item Reduces network requests and improves user-perceived latency.
+\end{itemize}
+
+\subsection*{CDN Cache}
+\begin{itemize}
+\item Stores content on geographically distributed edge servers.
+\item Serves users from a nearby location instead of repeatedly contacting the origin server.
+\item Commonly caches images, videos, scripts, stylesheets, and downloadable files.
+\end{itemize}
+
+\subsection*{Web-Server Cache}
+\begin{itemize}
+\item Stores complete pages, rendered templates, static files, or API responses on the server side.
+\item May be implemented using tools such as Nginx or Varnish.
+\item A single cached response can be shared across many users.
+\end{itemize}
+
+\subsection*{Application Cache}
+\begin{itemize}
+\item Exists inside or near the backend application.
+\item May use local memory, Redis, or Memcached.
+\item Commonly stores sessions, product details, permissions, configuration, and expensive computation results.
+\end{itemize}
+
+\subsection*{Database Cache}
+\begin{itemize}
+\item A database may internally cache frequently accessed data pages, index pages, and query plans in memory.
+\item This reduces repeated disk access.
+\item An external Redis cache placed before a database is normally considered an application or distributed cache.
+\end{itemize}
+
+\subsection*{Real-World Example}
+When a user opens an e-commerce product page, the browser may reuse cached images, the CDN may serve static files, the web server may return cached HTML, the application may retrieve product data from Redis, and the database may use its internal buffer cache for any remaining query.
+
 
 \end{document}
